@@ -73,5 +73,6 @@ int main(void)
     ReverseLinkedListRecursive(head);
     PrintLinkedList(head);
     delete head;
+    return 0;
 }
 
