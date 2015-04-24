@@ -2,90 +2,118 @@
 // Created by SunRenchen on 2015-04-21.
 //
 #include <iostream>
+#include "btree.h"
 
-template <typename T>
-struct bNode
+namespace src
 {
-    bNode(T data, bNode* left, bNode* right)
-            : data(data)
-            , left(left)
-            , right(right){}
-    ~bNode(){delete left; delete right;}
-    T data;
-    bNode* left;
-    bNode* right;
-};
+    template <typename T>
+    BTree<T>::BTree(T data, BTree<T> *left, BTree<T> *right)
+    : m_data(data)
+    , m_left(left)
+    , m_right(right){}
 
-template<typename T>
-void InOrderPrintBTree(bNode<T>* root)
-{
-    using namespace std;
-    if (!root){return;}
-    InOrderPrintBTree(root->left);
-    cout << root->data << " " << endl;
-    InOrderPrintBTree(root->right);
-}
-
-template <typename T>
-void PrintBTreeAtLevel(uint level, const bNode<T>* root)
-{
-    if (!root) {return;}
-    if (level == 0)
+    template <typename T>
+    BTree<T>::~BTree()
     {
-        std::cout << root->data;
+        delete m_left;
+        delete m_right;
     }
 
-    PrintBTreeAtLevel(level - 1, root->left);
-    PrintBTreeAtLevel(level - 1, root->right);
-}
-
-int max(int val1, int val2)
-{
-    return val1 > val2 ? val1 : val2;
-}
-
-template <typename T>
-uint BTreeHeightHelper(const bNode<T>* root, uint height)
-{
-    if (!root){return height;}
-    uint leftHeight = BTreeHeightHelper(root->left, height + 1);
-    uint rightHeight = BTreeHeightHelper(root->right, height + 1);
-    return max(leftHeight, rightHeight);
-}
-
-template <typename T>
-uint BTreeHeight(const bNode<T>* root)
-{
-    return BTreeHeightHelper(root, 0);
-}
-
-template <typename T>
-void PrintBTreeByLevel(const bNode<T>* root)
-{
-    using namespace std;
-    cout << "----------------Print BTree By Level----------------" << endl;
-    uint height = BTreeHeight(root);
-    for (uint i = 0; i < height; i++)
+    template <typename T>
+    void BTree<T>::InOrderPrint(std::ostream &out) const
     {
-       PrintBTreeAtLevel<T>(i, root);
-        cout << endl;
-    }
-    cout << "----------------------END--------------------------" << endl;
-}
+        using namespace std;
 
-int main(void)
-{
-    typedef bNode<int> _Node;
-    _Node* root
-            = new _Node(1, new _Node
-                            (2, new _Node
-                                    (3, new _Node
-                                            (4, new _Node
-                                                    (5, NULL, new _Node (6, NULL, NULL))
-                                                    , new _Node(7, NULL, new _Node(11, NULL, NULL))), NULL)
-                                    , new _Node(8, new _Node(9, NULL, NULL), NULL)), NULL);
-    InOrderPrintBTree(root);
-    PrintBTreeByLevel(root);
-    return 0;
+        if (m_left) {m_left->InOrderPrint(out);}
+
+        out << m_data << " " << endl;
+
+        if (m_right) {m_right->InOrderPrint(out);}
+    }
+
+    template <typename T>
+    void BTree<T>::PrintAtLevel(std::ostream &out, UInt32 level) const
+    {
+        if (level == 0)
+        {
+            out << m_data;
+        }
+
+        if (m_left)
+        {
+            m_left->PrintAtLevel(out, level - 1);
+        }
+
+        if (m_right)
+        {
+            m_right->PrintAtLevel(out, level - 1);
+        }
+    }
+
+    template <typename T>
+    void BTree<T>::PrintByLevel(std::ostream &out) const
+    {
+        UInt32 height = Height();
+        for (UInt32 i = 0; i < height; i++)
+        {
+            PrintAtLevel(out, i);
+            out << std::endl;
+        }
+    }
+
+    template <typename T>
+    UInt32 BTree<T>::Height() const
+    {
+        return 1 + std::max(m_left ? m_left->Height() : 0, m_right ? m_right->Height() : 0);
+    }
+
+    template <typename T>
+    const BTree<T>* BTree<T>::Left() const
+    {
+        return m_left;
+    }
+
+    template <typename T>
+    const BTree<T>* BTree<T>::Right() const
+    {
+        return m_right;
+    }
+
+    template <typename T>
+    bool BTree<T>::HasChild(src::BTree<T> const *node) const
+    {
+        if (!node){return false;}
+        if (m_left == node || m_right == node)
+        {
+            return true;
+        }
+
+        bool leftsubtree = m_left ? m_left->HasChild(node) : false;
+        bool rightsubtree = m_right ? m_right->HasChild(node) : false;
+        return leftsubtree || rightsubtree;
+    }
+
+    template <typename T>
+   const BTree<T>* BTree<T>::LowestCommonAncestor(const BTree<T>* one, const BTree<T>* two) const
+    {
+        if (!one || !two) {return NULL;}
+        if (one->HasChild(two)){ return one; }
+        if (two->HasChild(one)){ return two; }
+
+        bool HasOne = HasChild(one);
+        bool HasTwo = HasChild(two);
+        if (!HasChild(one) || !HasChild(two)) { return NULL; }
+        if (m_left && m_left->HasChild(one) && m_left->HasChild(two))
+        {
+            return m_left->LowestCommonAncestor(one, two);
+        }
+        else if (m_right && m_right->HasChild(one) && m_right->HasChild(two))
+        {
+            return m_right->LowestCommonAncestor(one, two);
+        }
+
+        return this;
+    }
+    template class BTree<int>;
 }
 
