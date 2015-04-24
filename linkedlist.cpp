@@ -63,6 +63,7 @@ void ReverseLinkedListRecursive(Node<T>*& head)
     cout << "-------------------------END-------------------------" << endl;
 }
 
+/*
 int main(void)
 {
     typedef Node<int> _Node;
@@ -76,3 +77,4 @@ int main(void)
     return 0;
 }
 
+*/
